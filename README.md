@@ -1,5 +1,3 @@
-# glsummary
-
 # QuickBooks General Ledger Monthly Summary
 
 A React.js application that processes QuickBooks Online general ledger exports and creates printable monthly summary tables.
@@ -68,6 +66,27 @@ If you encounter issues processing your file:
 - Uses SheetJS (xlsx) for Excel file parsing
 - Styled with Tailwind CSS
 - Includes print-specific media queries for optimal printing
+
+## Project Structure
+
+```
+quickbooks-gl-summary/
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   └── manifest.json
+├── src/
+│   ├── components/
+│   │   └── GeneralLedgerTable.jsx      # Main application component
+│   ├── styles/
+│   │   └── index.css                   # Tailwind CSS imports and custom styles
+│   ├── App.js                          # Application entry point
+│   ├── index.js                        # React DOM rendering
+│   └── setupTests.js                   # Test configuration
+├── package.json                        # Dependencies and scripts
+├── tailwind.config.js                  # Tailwind CSS configuration
+├── .gitignore                          # Git ignore configuration
+└── README.md                           # This documentation
 
 ## License
 
