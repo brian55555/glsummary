@@ -486,7 +486,7 @@ const GeneralLedgerTable = () => {
 
   return (
     <div>
-      <div className="mb-10 print:hide">
+      <div className="mb-10 print-hide">
         <div className="mb-6">
           <label className="block mb-2 font-medium">
             QuickBooks General Ledger File (.xlsx):&nbsp;
@@ -558,7 +558,7 @@ const GeneralLedgerTable = () => {
           <div className="mt-4">
             <button
               onClick={handleProcessFile}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg mr-4 shadow-sm transition duration-200"
+              className="glow-button bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg mr-4 shadow-sm transition duration-200"
               disabled={!fileName || isLoading}
             >
               Process File
