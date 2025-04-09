@@ -502,17 +502,14 @@ const GeneralLedgerTable = () => {
           {fileName && (
             <p className="mt-2 text-sm text-gray-600">File: {fileName}</p>
           )}
-
+        </div>
+        <div className="mb-6">
           {/* Column mapping options */}
           {availableFields.length > 0 && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h3 className="text-lg font-medium mb-3 text-gray-700">
-                Custom Column Mapping
+                Column Mapping
               </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                If the app cannot automatically detect the correct columns, you
-                can manually specify them below.
-              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -553,6 +550,8 @@ const GeneralLedgerTable = () => {
               </div>
             </div>
           )}
+        </div>
+        <div className="mb-6">
           <div className="mt-4">
             <button
               onClick={handleProcessFile}
@@ -561,12 +560,16 @@ const GeneralLedgerTable = () => {
             >
               Process File
             </button>
+          </div>
+          <div className="mt-4">
             <button
               onClick={loadSampleData}
               className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2.5 px-5 rounded-lg mr-4 shadow-sm transition duration-200"
             >
               Load Sample Data
             </button>
+          </div>
+          <div className="mt-4">
             {data && (
               <>
                 <button
@@ -574,12 +577,6 @@ const GeneralLedgerTable = () => {
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-200 mr-4"
                 >
                   Print Report
-                </button>
-                <button
-                  onClick={applyFilters}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-200"
-                >
-                  Apply Filters
                 </button>
               </>
             )}
