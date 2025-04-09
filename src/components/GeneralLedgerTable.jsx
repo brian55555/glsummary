@@ -486,13 +486,9 @@ const GeneralLedgerTable = () => {
   return (
     <div>
       <div className="mb-10 print:hidden">
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
-          Upload and Process General Ledger Data
-        </h2>
-
         <div className="mb-6">
           <label className="block mb-2 font-medium">
-            Upload QuickBooks General Ledger Excel File:&nbsp;
+            Upload QuickBooks General Ledger File (.xlsx):&nbsp;
           </label>
           <input
             id="file-input"
@@ -501,6 +497,8 @@ const GeneralLedgerTable = () => {
             onChange={handleFileUpload}
             className="block w-full text-gray-500 bg-gray-50 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
           />
+        </div>
+        <div className="mb-6">
           {fileName && (
             <p className="mt-2 text-sm text-gray-600">File: {fileName}</p>
           )}
@@ -517,7 +515,7 @@ const GeneralLedgerTable = () => {
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <label className="block text-sm font-medium mb-1 text-gray-700">
                     Date Column:
                   </label>
