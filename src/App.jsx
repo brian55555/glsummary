@@ -42,6 +42,7 @@ function App() {
               </Routes>
             </div>
           </div>
+          <div className="spacer"></div>
         </main>
 
         <footer className="bg-white border-t border-gray-200 print:hidden mt-8 shadow-glow-sm">

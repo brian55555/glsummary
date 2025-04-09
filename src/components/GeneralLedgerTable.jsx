@@ -158,7 +158,7 @@ const GeneralLedgerTable = () => {
 
     // If no custom field is specified, auto-detect
     if (!dateField) {
-      dateField = findDateField(processedData[0], true);
+      dateField = findDateField(processedData[1], true);
     }
 
     console.log("Date field found:", dateField);
@@ -171,6 +171,12 @@ const GeneralLedgerTable = () => {
 
       setError(
         "No date information found in the data. Please check the file format or try a different file.",
+        <button
+          onClick={loadSampleData}
+          className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2.5 px-5 rounded-lg mr-4 shadow-sm transition duration-200"
+        >
+          Load Sample Data
+        </button>,
       );
       return;
     }
@@ -228,7 +234,7 @@ const GeneralLedgerTable = () => {
 
     // If no custom field is specified, auto-detect
     if (!amountField) {
-      amountField = findAmountField(processedData[0], true);
+      amountField = findAmountField(processedData[1], true);
     }
 
     console.log("Amount field found:", amountField);
@@ -305,7 +311,7 @@ const GeneralLedgerTable = () => {
 
     // If no custom field is specified, auto-detect
     if (!amountField) {
-      amountField = findAmountField(jsonData[0]);
+      amountField = findAmountField(jsonData[1]);
     }
 
     if (!amountField) {
@@ -408,11 +414,6 @@ const GeneralLedgerTable = () => {
     }).format(amount);
   };
 
-  // Handle print button click
-  const handlePrint = () => {
-    window.print();
-  };
-
   // Handle account exclusion by clicking on a row
   const excludeAccount = (account) => {
     if (!excludedAccounts.includes(account)) {
@@ -485,10 +486,10 @@ const GeneralLedgerTable = () => {
 
   return (
     <div>
-      <div className="mb-10 print:hidden">
+      <div className="mb-10 print:hide">
         <div className="mb-6">
           <label className="block mb-2 font-medium">
-            Upload QuickBooks General Ledger File (.xlsx):&nbsp;
+            QuickBooks General Ledger File (.xlsx):&nbsp;
           </label>
           <input
             id="file-input"
@@ -514,7 +515,7 @@ const GeneralLedgerTable = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Date Column:
+                    Date:&nbsp;
                   </label>
                   <select
                     value={customDateField}
@@ -531,21 +532,23 @@ const GeneralLedgerTable = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Amount Column:
-                  </label>
-                  <select
-                    value={customAmountField}
-                    onChange={(e) => setCustomAmountField(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Auto-detect (recommended)</option>
-                    {availableFields.map((field) => (
-                      <option key={`amount-${field}`} value={field}>
-                        {field}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium mb-1 text-gray-700">
+                      Amount:&nbsp;
+                    </label>
+                    <select
+                      value={customAmountField}
+                      onChange={(e) => setCustomAmountField(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Auto-detect (recommended)</option>
+                      {availableFields.map((field) => (
+                        <option key={`amount-${field}`} value={field}>
+                          {field}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -561,26 +564,6 @@ const GeneralLedgerTable = () => {
               Process File
             </button>
           </div>
-          <div className="mt-4">
-            <button
-              onClick={loadSampleData}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2.5 px-5 rounded-lg mr-4 shadow-sm transition duration-200"
-            >
-              Load Sample Data
-            </button>
-          </div>
-          <div className="mt-4">
-            {data && (
-              <>
-                <button
-                  onClick={handlePrint}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-200 mr-4"
-                >
-                  Print Report
-                </button>
-              </>
-            )}
-          </div>
         </div>
 
         {isLoading && (
@@ -595,7 +578,6 @@ const GeneralLedgerTable = () => {
             <h2 className="text-2xl font-bold mb-4 print:text-2xl text-gray-800">
               General Ledger Monthly Summary
             </h2>
-            {fileName && <p className="mb-4">Source: {fileName}</p>}
             {excludedAccounts.length > 0 && (
               <div className="mb-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                 <p className="text-sm text-yellow-800">
