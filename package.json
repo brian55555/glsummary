@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "html-to-image": "^1.11.13",
     "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
+    "react-csv": "^2.2.2",
     "react-router-dom": "^6.30.0",
     "tempo-devtools": "^2.0.99",
     "xlsx": "^0.18.5"

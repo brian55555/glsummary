@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import _ from "lodash";
+// html-to-image import removed
 import ExcludedAccountsTable from "./ExcludedAccountsTable";
+import GLTable from "./tables/GLTable";
+import ColumnMappingForm from "./ColumnMappingForm";
 import { findDateField, findAmountField } from "../utils/columnMapping";
 import {
   parseDate,
@@ -22,6 +25,7 @@ const GeneralLedgerTable = () => {
   const [excludedAccountTotals, setExcludedAccountTotals] = useState({});
   const [customDateField, setCustomDateField] = useState("");
   const [customAmountField, setCustomAmountField] = useState("");
+  const [customAccountField, setCustomAccountField] = useState("");
   const [availableFields, setAvailableFields] = useState([]);
 
   // Process the Excel file data
@@ -118,22 +122,60 @@ const GeneralLedgerTable = () => {
     // Debug log to check the data structure
     console.log("Processing data:", processedData[0]);
 
+    // Determine which account field to use - either custom or auto-detected
+    let accountField = customAccountField;
+
+    // If no custom field is specified, auto-detect
+    if (!accountField) {
+      accountField = "Split"; // Default to Split
+
+      // Try common variations of the account field name
+      const possibleAccountFields = [
+        "Split",
+        "split",
+        "SPLIT",
+        "Account",
+        "account",
+        "ACCOUNT",
+        "Distribution account",
+      ];
+
+      for (const field of possibleAccountFields) {
+        if (processedData[0] && field in processedData[0]) {
+          accountField = field;
+          break;
+        }
+      }
+    }
+
+    console.log("Account field found:", accountField);
+
     // If we have excluded accounts, filter the data
     if (excludedAccounts.length > 0) {
       // Filter out transactions from excluded accounts
       processedData = processedData.filter((row) => {
         const account =
-          row.Split || row.split || row.SPLIT || row["Split"] || row["SPLIT"];
+          row[accountField] ||
+          row.Split ||
+          row.split ||
+          row.SPLIT ||
+          row["Split"] ||
+          row["SPLIT"];
         return !excludedAccounts.includes(account);
       });
     }
 
-    // Extract all unique accounts from the filtered data
+    // Extract all unique accounts from the filtered data using the determined account field
     const allAccounts = _.uniq(
       processedData.map((row) => {
-        // Check for various possible column names for the Split field
+        // Use the determined account field or fall back to checking various possible column names
         return (
-          row.Split || row.split || row.SPLIT || row["Split"] || row["SPLIT"]
+          row[accountField] ||
+          row.Split ||
+          row.split ||
+          row.SPLIT ||
+          row["Split"] ||
+          row["SPLIT"]
         );
       }),
     )
@@ -254,7 +296,12 @@ const GeneralLedgerTable = () => {
     // Populate the summary with transaction amounts
     processedData.forEach((row) => {
       const account =
-        row.Split || row.split || row.SPLIT || row["Split"] || row["SPLIT"];
+        row[accountField] ||
+        row.Split ||
+        row.split ||
+        row.SPLIT ||
+        row["Split"] ||
+        row["SPLIT"];
       if (!account || !allAccounts.includes(account)) return;
 
       const dateValue = row[dateField];
@@ -321,10 +368,40 @@ const GeneralLedgerTable = () => {
 
     console.log("Calculating totals for excluded accounts:", excludedAccounts);
 
+    // Determine which account field to use - either custom or auto-detected
+    let accountField = customAccountField;
+
+    // If no custom field is specified, auto-detect
+    if (!accountField) {
+      accountField = "Split"; // Default to Split
+
+      // Try common variations of the account field name
+      const possibleAccountFields = [
+        "Split",
+        "split",
+        "SPLIT",
+        "Account",
+        "account",
+        "ACCOUNT",
+      ];
+
+      for (const field of possibleAccountFields) {
+        if (jsonData[0] && field in jsonData[0]) {
+          accountField = field;
+          break;
+        }
+      }
+    }
+
     // Process only the excluded accounts from the data
     jsonData.forEach((row) => {
       const account =
-        row.Split || row.split || row.SPLIT || row["Split"] || row["SPLIT"];
+        row[accountField] ||
+        row.Split ||
+        row.split ||
+        row.SPLIT ||
+        row["Split"] ||
+        row["SPLIT"];
 
       if (!account || !excludedAccounts.includes(account)) return;
 
@@ -402,8 +479,8 @@ const GeneralLedgerTable = () => {
     return totals;
   };
 
-  // Format date for display (Jan 2023) - now using utility function
-  const formatMonth = formatMonthYearForDisplay;
+  // Table reference for export functionality
+  const tableRef = useRef(null);
 
   // Format currency
   const formatCurrency = (amount) => {
@@ -414,11 +491,14 @@ const GeneralLedgerTable = () => {
     }).format(amount);
   };
 
+  // PNG export functionality has been removed
+
   // Handle account exclusion by clicking on a row
   const excludeAccount = (account) => {
     if (!excludedAccounts.includes(account)) {
+      console.log(`Excluding account: ${account}`);
       setExcludedAccounts((prev) => [...prev, account]);
-      // No need to call processSummaryData here as the useEffect will handle it
+      // The useEffect will handle reprocessing the data
     }
   };
 
@@ -441,7 +521,12 @@ const GeneralLedgerTable = () => {
     if (originalData) {
       processSummaryData(originalData);
     }
-  }, [excludedAccounts, customDateField, customAmountField]);
+  }, [
+    excludedAccounts,
+    customDateField,
+    customAmountField,
+    customAccountField,
+  ]);
 
   // Add a sample data for testing if needed
   const loadSampleData = () => {
@@ -486,190 +571,83 @@ const GeneralLedgerTable = () => {
 
   return (
     <div>
-      <div className="mb-10 print-hide">
-        <div className="mb-6">
-          <label className="block mb-2 font-medium">
-            QuickBooks General Ledger File (.xlsx):&nbsp;
-          </label>
-          <input
-            id="file-input"
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            className="block w-full text-gray-500 bg-gray-50 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          />
-        </div>
-        <div className="mb-6">
+      <div className="container print-hide">
+        <form className="form-horizontal">
+          <div className="class=form-group">
+            <div className="col-4 col-sm-12">
+              <label className="form-label">
+                QuickBooks General Ledger File (.xlsx):&nbsp;
+              </label>
+            </div>
+            <div className="col-4 col-sm-12">
+              <input
+                id="file-input"
+                className="form-input btn"
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+              />
+            </div>
+          </div>
+        </form>
+        <div className="col-4 col-sm-12">
           {fileName && (
-            <p className="mt-2 text-sm text-gray-600">File: {fileName}</p>
+            <p className="label label-secondary">File: {fileName}</p>
           )}
         </div>
-        <div className="mb-6">
+        <div className="col-3 col-sm-12">
           {/* Column mapping options */}
           {availableFields.length > 0 && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-medium mb-3 text-gray-700">
-                Column Mapping
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Date:&nbsp;
-                  </label>
-                  <select
-                    value={customDateField}
-                    onChange={(e) => setCustomDateField(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Auto-detect (recommended)</option>
-                    {availableFields.map((field) => (
-                      <option key={`date-${field}`} value={field}>
-                        {field}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium mb-1 text-gray-700">
-                      Amount:&nbsp;
-                    </label>
-                    <select
-                      value={customAmountField}
-                      onChange={(e) => setCustomAmountField(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Auto-detect (recommended)</option>
-                      {availableFields.map((field) => (
-                        <option key={`amount-${field}`} value={field}>
-                          {field}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ColumnMappingForm
+              availableFields={availableFields}
+              customDateField={customDateField}
+              customAmountField={customAmountField}
+              customAccountField={customAccountField}
+              setCustomDateField={setCustomDateField}
+              setCustomAmountField={setCustomAmountField}
+              setCustomAccountField={setCustomAccountField}
+            />
           )}
         </div>
-        <div className="mb-6">
-          <div className="mt-4">
+        <div className="columns">
+          <div className="col-3">
             <button
+              className="btn"
               onClick={handleProcessFile}
-              className="glow-button bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-lg mr-4 shadow-sm transition duration-200"
               disabled={!fileName || isLoading}
             >
               Process File
             </button>
           </div>
         </div>
-
-        {isLoading && (
-          <p className="text-blue-500 mt-4">Processing file, please wait...</p>
-        )}
-        {error && <p className="text-red-500 mt-4">{error}</p>}
+        {isLoading && <p className="">Processing file, please wait...</p>}
+        {error && <p className="">{error}</p>}
       </div>
 
       {data && accounts.length > 0 && months.length > 0 && (
         <div className="overflow-x-auto">
-          <div className="print:text-sm w-[90%] mx-auto">
-            <h2 className="text-2xl font-bold mb-4 print:text-2xl text-gray-800">
-              General Ledger Monthly Summary
-            </h2>
-            {excludedAccounts.length > 0 && (
-              <div className="mb-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <p className="text-sm text-yellow-800">
-                  <span className="font-semibold">Note:</span>{" "}
-                  {excludedAccounts.length} account(s) excluded from summary.
-                  Click on any account row to exclude it from the summary.
-                </p>
-              </div>
-            )}
+          {/* PNG export button removed */}
 
-            <table className="min-w-full border-collapse border border-gray-300 table-auto rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-gray-200 text-gray-800">
-                  <th className="border border-gray-300 p-3 text-left font-semibold">
-                    Account
-                  </th>
-                  {months.map((month) => (
-                    <th
-                      key={month}
-                      className="border border-gray-300 p-3 text-right font-semibold"
-                    >
-                      {formatMonth(month)}
-                    </th>
-                  ))}
-                  <th className="border border-gray-300 p-3 text-right font-semibold">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.map((account) => {
-                  const rowTotals = calculateRowTotals();
-                  return (
-                    <tr
-                      key={account}
-                      className="hover:bg-gray-50 even:bg-gray-50"
-                    >
-                      <td
-                        className="border border-gray-300 p-3 font-medium cursor-pointer hover:bg-blue-50"
-                        onClick={() => excludeAccount(account)}
-                        title="Click to exclude this account"
-                      >
-                        {account}
-                      </td>
-                      {months.map((month) => (
-                        <td
-                          key={`${account}-${month}`}
-                          className="border border-gray-300 p-3 text-right"
-                        >
-                          {summaryData[account] &&
-                          summaryData[account][month] === 0
-                            ? "-"
-                            : formatCurrency(
-                                summaryData[account]?.[month] || 0,
-                              )}
-                        </td>
-                      ))}
-                      <td className="border border-gray-300 p-3 text-right font-medium bg-gray-100">
-                        {formatCurrency(rowTotals[account] || 0)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-gray-200 font-bold text-gray-800">
-                  <td className="border border-gray-300 p-3 font-bold">
-                    Total
-                  </td>
-                  {months.map((month) => {
-                    const columnTotals = calculateColumnTotals();
-                    return (
-                      <td
-                        key={`total-${month}`}
-                        className="border border-gray-300 p-3 text-right font-bold"
-                      >
-                        {formatCurrency(columnTotals[month] || 0)}
-                      </td>
-                    );
-                  })}
-                  <td className="border border-gray-300 p-3 text-right font-bold bg-gray-100">
-                    {formatCurrency(
-                      Object.values(calculateRowTotals()).reduce(
-                        (sum, value) => sum + value,
-                        0,
-                      ),
-                    )}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <GLTable
+            accounts={accounts}
+            months={months}
+            summaryData={summaryData}
+            calculateRowTotals={calculateRowTotals}
+            calculateColumnTotals={calculateColumnTotals}
+            excludeAccount={excludeAccount}
+            formatCurrency={formatCurrency}
+            tableRef={tableRef}
+          />
+
+          {excludedAccounts.length > 0 && (
+            <div className="p-2 text-small">
+              <p>
+                <span className="label label-warning">Note:</span>{" "}
+                {excludedAccounts.length} account(s) excluded from summary.
+                Click on any account row to exclude it from the summary.
+              </p>
+            </div>
+          )}
 
           {/* Excluded Accounts Table */}
           <ExcludedAccountsTable
